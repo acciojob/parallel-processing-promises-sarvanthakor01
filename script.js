@@ -1,44 +1,37 @@
 //your JS code here. If required.document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function () {
+  const button = document.getElementById("download-images-button");
   const outputDiv = document.getElementById("output");
-const errorDiv = document.getElementById("error");
-const loadingDiv = document.getElementById("loading");
-const button = document.getElementById("download-images-button");
 
-const imageUrls = [
-  "https://picsum.photos/id/237/200/300",
-  "https://picsum.photos/id/238/200/300",
-  "https://picsum.photos/id/239/200/300",
-];
+  if (!button || !outputDiv) {
+    console.error("Button or output div not found!");
+    return;
+  }
 
-// Function to download an image and return a Promise
-function downloadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = url;
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(`Failed to load image: ${url}`);
-  });
-}
+  button.addEventListener("click", function () {
+    outputDiv.innerHTML = ""; // Clear existing images
 
-// Main function to download images in parallel
-function downloadImages() {
-  // Clear previous content
-  outputDiv.innerHTML = "";
-  errorDiv.innerHTML = "";
-  loadingDiv.style.display = "block"; // Show loading spinner
+    // Image URLs
+    const imageUrls = [
+      "https://picsum.photos/id/237/200/300",
+      "https://picsum.photos/id/238/200/300",
+      "https://picsum.photos/id/239/200/300",
+    ];
 
-  const downloadPromises = imageUrls.map((url) => downloadImage(url));
-
-  Promise.all(downloadPromises)
-    .then((images) => {
-      loadingDiv.style.display = "none"; // Hide loading spinner
-      images.forEach((img) => outputDiv.appendChild(img)); // Append images to output
-    })
-    .catch((error) => {
-      loadingDiv.style.display = "none"; // Hide loading spinner
-      errorDiv.textContent = error; // Display error message
+    // Create promises for loading images
+    const imagePromises = imageUrls.map((url) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img); // Resolve when image loads
+      });
     });
-}
 
-// Attach event listener to button
-button.addEventListener("click", downloadImages);
+    // Wait for all images to load using Promise.all
+    Promise.all(imagePromises)
+      .then((images) => {
+        images.forEach((img) => outputDiv.appendChild(img)); // Append images to output
+      })
+      .catch((error) => console.error("Image loading failed", error));
+  });
+});
