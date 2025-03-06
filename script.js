@@ -1,39 +1,60 @@
 //your JS code here. If required.document.addEventListener("DOMContentLoaded", () => {
-   const imageUrls = [
-  "https://picsum.photos/id/237/200/300",
-  "https://picsum.photos/id/238/200/300",
-  "https://picsum.photos/id/239/200/300"
-];
+  document.addEventListener("DOMContentLoaded", function () {
+    const output = document.getElementById("output");
 
-// Function to download a single image
-function downloadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = url;
+    // Create required divs
+    const loadingDiv = document.createElement("div");
+    loadingDiv.id = "loading";
+    loadingDiv.innerText = "Loading...";
+    loadingDiv.style.display = "none"; // Initially hidden
+    output.appendChild(loadingDiv);
 
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(`Failed to load image: ${url}`);
-  });
-}
+    const errorDiv = document.createElement("div");
+    errorDiv.id = "error";
+    errorDiv.style.color = "red";
+    output.appendChild(errorDiv);
 
-// Function to download multiple images in parallel
-function downloadImages() {
-  const outputDiv = document.getElementById("output");
-  
-  // Clear previous content
-  outputDiv.innerHTML = '<p id="loading">Loading...</p>';
+    const images = [
+        { url: "https://picsum.photos/id/237/200/300" },
+        { url: "https://picsum.photos/id/238/200/300" },
+        { url: "https://picsum.photos/id/239/200/300" }
+    ];
 
-  Promise.all(imageUrls.map(downloadImage))
-    .then(images => {
-      document.getElementById("loading").remove(); // Remove loading message
+    // Function to download a single image
+    function downloadImage(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = url;
+            img.onload = () => resolve(img); // Resolve when the image loads
+            img.onerror = () => reject(`Failed to load image: ${url}`); // Reject if the image fails to load
+        });
+    }
 
-      images.forEach(img => outputDiv.appendChild(img));
-    })
-    .catch(error => {
-      document.getElementById("loading").remove(); // Remove loading message
-      outputDiv.innerHTML = `<p style="color: red">${error}</p>`; // Show error message
-    });
-}
+    // Function to download all images in parallel
+    async function downloadImages() {
+        errorDiv.innerText = ""; // Clear previous errors
+        output.innerHTML = ""; // Clear previous images
+        output.appendChild(loadingDiv);
+        loadingDiv.style.display = "block"; // Show loading spinner
 
-// Run the function to automatically download images when the page loads
-document.addEventListener("DOMContentLoaded", downloadImages);
+        try {
+            const imagePromises = images.map(image => downloadImage(image.url));
+            const loadedImages = await Promise.all(imagePromises); // Download all images in parallel
+
+            loadingDiv.style.display = "none"; // Hide loading spinner
+
+            // Append images to output div
+            loadedImages.forEach(img => output.appendChild(img));
+        } catch (error) {
+            loadingDiv.style.display = "none"; // Hide loading spinner
+            errorDiv.innerText = error; // Display error message
+        }
+    }
+
+    // Create and append the button
+    const btn = document.createElement("button");
+    btn.id = "download-images-button";
+    btn.innerText = "Download Images";
+    btn.addEventListener("click", downloadImages);
+    output.appendChild(btn);
+});
